@@ -4,23 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Brenda & Eleazer - Days Together</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@400;700&display=swap">
     <link rel="stylesheet" href="styles/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="hearts-bg"></div>
     <div class="custom-cursor"></div>
     <header>
-        <h1>
-            <span class="gradient-text">Brenda &amp; Eleazer</span>
-        </h1>
+        <h1 class="gradient-text">Brenda &amp; Eleazer</h1>
         <p class="subtitle">Our Beautiful Journey</p>
     </header>
     <main>
         <section id="days-together" class="glass">
             <div class="heart-animation"></div>
             <h2 class="fade-in">We've been together for</h2>
-            <p id="days-count" class="glow-text">7 days</p>
+            <div id="countdown" class="glow-text"></div>
             <p class="since-date">Since: <span id="since-date"></span></p>
         </section>
         <section class="memories-section glass">
@@ -40,66 +38,120 @@
     <footer>
         <p>With love, always 💖</p>
     </footer>
-    <script src="../src/main.js"></script>
     <script>
-    // Carousel logic
-    const images = document.querySelectorAll('.carousel-images img');
+    // --- Memories Carousel with Add/Remove functionality ---
+    const carouselImagesDiv = document.querySelector('.carousel-images');
+    const addPhotoBtn = document.getElementById('add-photo-btn');
+    const removePhotoBtn = document.getElementById('remove-photo-btn');
+    const addPhotoInput = document.getElementById('add-photo-input');
+
+    // Default images (used if localStorage is empty)
+    const defaultImages = [
+        "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80",
+        "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80",
+        "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80"
+    ];
+
+    function getImages() {
+        const stored = localStorage.getItem('memoriesImages');
+        return stored ? JSON.parse(stored) : defaultImages;
+    }
+    function setImages(images) {
+        localStorage.setItem('memoriesImages', JSON.stringify(images));
+    }
+    let images = getImages();
     let idx = 0;
+
+    function renderImages() {
+        carouselImagesDiv.innerHTML = '';
+        images.forEach((src, i) => {
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = `Memory ${i+1}`;
+            img.style.display = i === idx ? 'block' : 'none';
+            carouselImagesDiv.appendChild(img);
+        });
+    }
     function showImage(i) {
-        images.forEach((img, j) => img.style.display = j === i ? 'block' : 'none');
+        idx = i;
+        if (images.length === 0) {
+            carouselImagesDiv.innerHTML = '<p style="color:#e75480;">No photos yet. Add one!</p>';
+            return;
+        }
+        Array.from(carouselImagesDiv.children).forEach((img, j) => {
+            img.style.display = j === idx ? 'block' : 'none';
+        });
     }
     document.querySelector('.carousel-btn.left').onclick = () => {
+        if (images.length === 0) return;
         idx = (idx - 1 + images.length) % images.length;
         showImage(idx);
     };
     document.querySelector('.carousel-btn.right').onclick = () => {
+        if (images.length === 0) return;
         idx = (idx + 1) % images.length;
         showImage(idx);
     };
+    addPhotoBtn.onclick = () => addPhotoInput.click();
+    addPhotoInput.onchange = function() {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            images.push(e.target.result);
+            setImages(images);
+            idx = images.length - 1;
+            renderImages();
+            showImage(idx);
+        };
+        reader.readAsDataURL(file);
+        this.value = '';
+    };
+    removePhotoBtn.onclick = () => {
+        if (images.length === 0) return;
+        images.splice(idx, 1);
+        setImages(images);
+        if (idx >= images.length) idx = images.length - 1;
+        renderImages();
+        showImage(idx);
+    };
+    renderImages();
     showImage(idx);
 
-    // Custom cursor
+    // --- Countdown logic ---
+    const anniversary = new Date();
+    anniversary.setDate(anniversary.getDate() - 7); // 1 week ago
+
+    function updateCountdown() {
+        const now = new Date();
+        let diff = now - anniversary;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        diff -= days * (1000 * 60 * 60 * 24);
+        const hours = Math.floor(diff / (1000 * 60 * 60));
+        diff -= hours * (1000 * 60 * 60);
+        const minutes = Math.floor(diff / (1000 * 60));
+        diff -= minutes * (1000 * 60);
+        const seconds = Math.floor(diff / 1000);
+
+        document.getElementById('countdown').textContent =
+            `${days} day${days !== 1 ? 's' : ''}, ` +
+            `${hours.toString().padStart(2, '0')}h : ` +
+            `${minutes.toString().padStart(2, '0')}m : ` +
+            `${seconds.toString().padStart(2, '0')}s`;
+
+        document.getElementById('since-date').textContent = anniversary.toLocaleDateString(undefined, {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+    }
+    setInterval(updateCountdown, 1000);
+    updateCountdown();
+
+    // --- Custom cursor ---
     const cursor = document.querySelector('.custom-cursor');
     document.addEventListener('mousemove', e => {
         cursor.style.left = e.clientX + 'px';
         cursor.style.top = e.clientY + 'px';
     });
-
-    // Add photo logic
-    const addPhotoBtn = document.getElementById('add-photo-btn');
-    const removePhotoBtn = document.getElementById('remove-photo-btn');
-    const addPhotoInput = document.getElementById('add-photo-input');
-
-    addPhotoBtn.onclick = () => addPhotoInput.click();
-    addPhotoInput.onchange = () => {
-        const file = addPhotoInput.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                const img = document.createElement('img');
-                img.src = e.target.result;
-                img.alt = 'Memory Photo';
-                img.style.width = '100%';
-                img.style.borderRadius = '10px';
-                const div = document.createElement('div');
-                div.appendChild(img);
-                document.querySelector('.carousel-images').appendChild(div);
-                images.push(img);
-                idx = images.length - 1;
-                showImage(idx);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
-    removePhotoBtn.onclick = () => {
-        if (images.length > 0) {
-            images[idx].parentElement.remove();
-            images.splice(idx, 1);
-            idx = idx >= images.length ? images.length - 1 : idx;
-            showImage(idx);
-        }
-    };
     </script>
 </body>
 </html>
