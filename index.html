@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brenda & Eleazer - Days Together</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@400;700&display=swap">
+    <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+    <div class="hearts-bg"></div>
+    <div class="custom-cursor"></div>
+    <header>
+        <h1>
+            <span class="gradient-text">Brenda &amp; Eleazer</span>
+        </h1>
+        <p class="subtitle">Our Beautiful Journey</p>
+    </header>
+    <main>
+        <section id="days-together" class="glass">
+            <div class="heart-animation"></div>
+            <h2 class="fade-in">We've been together for</h2>
+            <p id="days-count" class="glow-text">7 days</p>
+            <p class="since-date">Since: <span id="since-date"></span></p>
+        </section>
+        <section class="memories-section glass">
+            <h3 class="gradient-text">Our Memories</h3>
+            <div class="carousel">
+                <button class="carousel-btn left">&#10094;</button>
+                <div class="carousel-images"></div>
+                <button class="carousel-btn right">&#10095;</button>
+            </div>
+            <div class="memories-controls">
+                <input type="file" id="add-photo-input" accept="image/*" style="display:none;">
+                <button class="memories-btn" id="add-photo-btn">Add Photo</button>
+                <button class="memories-btn" id="remove-photo-btn">Remove Current Photo</button>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>With love, always 💖</p>
+    </footer>
+    <script src="../src/main.js"></script>
+    <script>
+    // Carousel logic
+    const images = document.querySelectorAll('.carousel-images img');
+    let idx = 0;
+    function showImage(i) {
+        images.forEach((img, j) => img.style.display = j === i ? 'block' : 'none');
+    }
+    document.querySelector('.carousel-btn.left').onclick = () => {
+        idx = (idx - 1 + images.length) % images.length;
+        showImage(idx);
+    };
+    document.querySelector('.carousel-btn.right').onclick = () => {
+        idx = (idx + 1) % images.length;
+        showImage(idx);
+    };
+    showImage(idx);
+
+    // Custom cursor
+    const cursor = document.querySelector('.custom-cursor');
+    document.addEventListener('mousemove', e => {
+        cursor.style.left = e.clientX + 'px';
+        cursor.style.top = e.clientY + 'px';
+    });
+
+    // Add photo logic
+    const addPhotoBtn = document.getElementById('add-photo-btn');
+    const removePhotoBtn = document.getElementById('remove-photo-btn');
+    const addPhotoInput = document.getElementById('add-photo-input');
+
+    addPhotoBtn.onclick = () => addPhotoInput.click();
+    addPhotoInput.onchange = () => {
+        const file = addPhotoInput.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = 'Memory Photo';
+                img.style.width = '100%';
+                img.style.borderRadius = '10px';
+                const div = document.createElement('div');
+                div.appendChild(img);
+                document.querySelector('.carousel-images').appendChild(div);
+                images.push(img);
+                idx = images.length - 1;
+                showImage(idx);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    removePhotoBtn.onclick = () => {
+        if (images.length > 0) {
+            images[idx].parentElement.remove();
+            images.splice(idx, 1);
+            idx = idx >= images.length ? images.length - 1 : idx;
+            showImage(idx);
+        }
+    };
+    </script>
+</body>
+</html>
